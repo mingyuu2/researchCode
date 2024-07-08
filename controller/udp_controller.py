@@ -106,18 +106,16 @@ class UDPDetectionOFC(app_manager.RyuApp):
 
 		actions = [parser.OFPActionOutput(out_port)]
 
-		print("bbbbb")
-		if out_port != ofproto.OFPP_FLOOD:
-			print("cccc")
-			if eth.ethertype == ether_types.ETH_TYPE_IP:
-				ip = pkt.get_protocols(ipv4.ipv4)[0]
-				srcip = ip.src
-				dstip = ip.dst
-				protoip = ip.protoip
-
-				print("aaaaaa")
-				if protoip == 17: ## udp
-					print("xxxxxxxx")
+		if eth.ethertype == ether_types.ETH_TYPE_IP:
+			ip = pkt.get_protocols(ipv4.ipv4)[0]
+			src_ip = ip.src
+			dst_ip = ip.dst
+			proto_ip = ip.proto
+			if proto_ip == 17: # UDP
+				match = parser.OFPMatch(eth_type=ether_types.ETH_TYPE_IP, ip_proto=17, ipv4_src=src_ip)
+				actions = [] # Drop Action
+				self.add_flow(datapath, 1, 200, match, actions)
+				return
 
 		data = None
 		if msg.buffer_id == ofproto.OFP_NO_BUFFER:
